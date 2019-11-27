@@ -203,17 +203,33 @@ if __name__ == '__main__':
     log.info('Vectorizing faces into N x d matrix')
     # Reshape the faces to into an N x d matrix (slide 26)
     log.info(faces)
+    log.info(faces.shape)  # (1000, 78, 78)
+    faces = np.reshape(faces, (-1, 6084))  # 78 * 78 = 6084
 
-    print('Splitting dataset into {} for training and {} for testing'.format(
+    log.info('Splitting dataset into {} for training and {} for testing'.format(
         N_TRAIN, faces.shape[0]-N_TRAIN))
     faces_train = faces[0:N_TRAIN, ...]
     faces_test = faces[N_TRAIN::, ...]
 
-    print('Computing eigenfaces from training set')
-    # TODO: obtain eigenfaces and eigenvalues
+    log.info('Computing eigenfaces from training set (slide 28)')
+    # obtain eigenfaces and eigenvalues
+    mu_train = np.mean(faces_train, axis=0)
+    log.info("mu_train.shape: " + str(mu_train.shape))
 
-    print('Plotting the eigenvalues from largest to smallest')
-    # TODO: plot the first 200 eigenvalues from largest to smallest
+    B_train = faces_train - mu_train
+    log.info("B_train.shape: " + str(B_train.shape))
+    log.info("B_train.shape[0]: " + str(B_train.shape[0]))
+
+    # Find the covariance matrix (slide 28)
+    # (850, 6084) x (6084, 850) => (6084, 6084)
+    C = np.matmul(B_train.T, B_train)/(B_train.shape[0])
+    log.info("C.shape: " + str(C.shape))
+
+    # Eigen decomposition
+    S, V = np.linalg.eig(C)
+
+    log.info('Plotting the eigenvalues from largest to smallest')
+    # plot the first 200 eigenvalues from largest to smallest
 
     print('Visualizing the top 25 eigenfaces')
     # TODO: visualize the top 25 eigenfaces
