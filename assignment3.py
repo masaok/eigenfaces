@@ -14,6 +14,8 @@ from pprint import pformat
 
 import re
 
+import os.path
+
 """
 Name: Kitamura, Masao
 
@@ -68,6 +70,13 @@ def get_eigenfaces(eigenvalues, eigenvectors, k):
 
       returns d x k vector
     """
+
+    # sort eigenvalues
+    # take order
+    # sort eigenvectors
+    # select from 0 to k
+    # eigenvectors
+    # return eigenfaces ?
 
 
 def project(faces, faces_mean, eigenfaces):
@@ -225,14 +234,68 @@ if __name__ == '__main__':
     C = np.matmul(B_train.T, B_train)/(B_train.shape[0])
     log.info("C.shape: " + str(C.shape))
 
-    # Eigen decomposition
-    S, V = np.linalg.eig(C)
+    # Cache locally
+    sigmafile = "data_sigma.npy"
+    vectorfile = "data_vectors.npy"
+
+    if os.path.isfile(sigmafile) and os.path.isfile(vectorfile):
+        log.info("Cache files exist")
+        S = np.load(sigmafile)
+        V = np.load(vectorfile)
+    else:
+        log.info("Cache files do not exist")
+        # Eigen decomposition
+        S, V = np.linalg.eig(C)
+        np.save(sigmafile, S)
+        np.save(vectorfile, V)
 
     log.info('Plotting the eigenvalues from largest to smallest')
     # plot the first 200 eigenvalues from largest to smallest
 
-    print('Visualizing the top 25 eigenfaces')
+    #fig = plt.figure()
+    # for i in range(1, 200):
+    #ax = fig.add_subplot()
+
+    log.info(S)
+    log.info(V)
+
+    log.info("S.shape: " + str(S.shape))  # (6084,)
+    log.info("V.shape: " + str(V.shape))  # (6084, 6084)
+
+    # Sort the values in descending order
+    # top_values = np.sort(S)
+    # top_values = np.flip(top_values)
+    order = np.argsort(S)[::-1]
+    V = V[:, order]
+
+    # Get the top 200
+    # top_values = S[0:200]
+    W = V[:, 0:200]  # Transformation for projecting X to subspace
+
+    # Project our data
+    Z_train = np.matmul(B_train, W)  # (850, 200)
+    log.info("Z_train.shape: " + str(Z_train.shape))
+
+    X_train_hat = np.matmul(Z_train, W.T)+mu_train  # (850, 6084)
+    log.info("X_train_hat.shape: " + str(X_train_hat.shape))
+
+    X_train = faces_train
+    mse = np.mean((X_train-X_train_hat)**2)
+    log.info("MSE: " + str(mse))
+
+    # Plot and show
+    plt.plot(W)
+    plt.show(block=True)  # Show the plot (python3 on Mac terminal)
+
+    log.info('Visualizing the top 25 eigenfaces')
     # TODO: visualize the top 25 eigenfaces
+    fig = plt.figure()
+    fig.suptitle('Top 25 Eigenfaces')
+    for i in range(0, 25):
+        ax = fig.add_subplot(5, 5, i+1)
+        ax.imshow(top_values[i, ...])
+
+    fig.show(block=True)  # Show the plot (python3 on Mac terminal)
 
     print('Plotting training reconstruction error for various k')
     # TODO: plot the mean squared error of training set with
