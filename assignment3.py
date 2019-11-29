@@ -263,13 +263,17 @@ if __name__ == '__main__':
     log.info("V.shape: " + str(V.shape))  # (6084, 6084)
 
     # Sort the values in descending order
-    # top_values = np.sort(S)
-    # top_values = np.flip(top_values)
+    top_values = np.sort(S)
+    top_values = np.flip(top_values)
+
+    # Another way to sort?
     order = np.argsort(S)[::-1]
     V = V[:, order]
 
     # Get the top 200
-    # top_values = S[0:200]
+    top_values = S[0:200]
+
+    # Alternate way?
     W = V[:, 0:200]  # Transformation for projecting X to subspace
 
     # Project our data
@@ -284,7 +288,8 @@ if __name__ == '__main__':
     log.info("MSE: " + str(mse))
 
     # Plot and show
-    plt.plot(W)
+    plt.plot(top_values)
+    # plt.plot(W)  # Other way, as done in digits example?
     plt.show(block=True)  # Show the plot (python3 on Mac terminal)
 
     log.info('Visualizing the top 25 eigenfaces')
