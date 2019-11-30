@@ -5,6 +5,7 @@ import glob
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
+import matplotlib
 
 import argparse
 import logging
@@ -266,26 +267,26 @@ if __name__ == '__main__':
     top_values = np.sort(S)
     top_values = np.flip(top_values)
 
-    # Another way to sort?
-    order = np.argsort(S)[::-1]
-    V = V[:, order]
+    # # Another way to sort?
+    # order = np.argsort(S)[::-1]
+    # V = V[:, order]
 
     # Get the top 200
     top_values = S[0:200]
 
     # Alternate way?
-    W = V[:, 0:200]  # Transformation for projecting X to subspace
+    # W = V[:, 0:200]  # Transformation for projecting X to subspace
 
     # Project our data
-    Z_train = np.matmul(B_train, W)  # (850, 200)
-    log.info("Z_train.shape: " + str(Z_train.shape))
+    # Z_train = np.matmul(B_train, W)  # (850, 200)
+    # log.info("Z_train.shape: " + str(Z_train.shape))
 
-    X_train_hat = np.matmul(Z_train, W.T)+mu_train  # (850, 6084)
-    log.info("X_train_hat.shape: " + str(X_train_hat.shape))
+    # X_train_hat = np.matmul(Z_train, W.T)+mu_train  # (850, 6084)
+    # log.info("X_train_hat.shape: " + str(X_train_hat.shape))
 
-    X_train = faces_train
-    mse = np.mean((X_train-X_train_hat)**2)
-    log.info("MSE: " + str(mse))
+    # X_train = faces_train
+    # mse = np.mean((X_train-X_train_hat)**2)
+    # log.info("MSE: " + str(mse))
 
     # Plot and show
     plt.plot(top_values)
@@ -293,14 +294,19 @@ if __name__ == '__main__':
     plt.show(block=True)  # Show the plot (python3 on Mac terminal)
 
     log.info('Visualizing the top 25 eigenfaces')
+
+    log.info(matplotlib.get_backend()) # debug
+
     # TODO: visualize the top 25 eigenfaces
+    log.info("faces_train.shape: " + str(faces_train.shape))  # (850, 6048) and sqrt(6084) = 78
+    faces_train = np.reshape(faces_train, (-1, 78, 78))
     fig = plt.figure()
     fig.suptitle('Top 25 Eigenfaces')
     for i in range(0, 25):
         ax = fig.add_subplot(5, 5, i+1)
-        ax.imshow(top_values[i, ...])
+        ax.imshow(faces_train[i, ...])
 
-    fig.show(block=True)  # Show the plot (python3 on Mac terminal)
+    fig.show()
 
     print('Plotting training reconstruction error for various k')
     # TODO: plot the mean squared error of training set with

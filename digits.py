@@ -42,6 +42,8 @@ split_idx = int(0.90*X.shape[0])
 X_train, y_train = X[:split_idx, :], X[:split_idx]
 X_test, y_test = X[split_idx:, :], X[split_idx:]
 
+print("X_train.shape: " + str(X_train.shape))
+
 # Compute the mean and center the data (Slide 28)
 mu_train = np.mean(X_train, axis=0)
 B_train = X_train-mu_train
