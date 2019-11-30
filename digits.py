@@ -110,6 +110,7 @@ fig = plt.figure()
 for i in range(0, 16):  # rendering 16 images total?
     ax = fig.add_subplot(4, 4, i+1)  # 4 x 4 = 16 ?
     if i < 8:
+        print("X_train[i, ...].shape: " + str(X_train[i, ...].shape))
         ax.imshow(X_train[i, ...])
     else:
         ax.imshow(X_train_hat[i-8, ...])

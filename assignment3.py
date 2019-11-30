@@ -211,7 +211,7 @@ if __name__ == '__main__':
     faces = faces/255.0
 
     log.info('Vectorizing faces into N x d matrix')
-    # Reshape the faces to into an N x d matrix (slide 26)
+    # DONE: Reshape the faces to into an N x d matrix (slide 26)
     log.info(faces)
     log.info(faces.shape)  # (1000, 78, 78)
     faces = np.reshape(faces, (-1, 6084))  # 78 * 78 = 6084
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     faces_test = faces[N_TRAIN::, ...]
 
     log.info('Computing eigenfaces from training set (slide 28)')
-    # obtain eigenfaces and eigenvalues
+    # DONE: obtain eigenfaces and eigenvalues
     mu_train = np.mean(faces_train, axis=0)
     log.info("mu_train.shape: " + str(mu_train.shape))
 
@@ -251,7 +251,7 @@ if __name__ == '__main__':
         np.save(vectorfile, V)
 
     log.info('Plotting the eigenvalues from largest to smallest')
-    # plot the first 200 eigenvalues from largest to smallest
+    # DONE: plot the first 200 eigenvalues from largest to smallest
 
     #fig = plt.figure()
     # for i in range(1, 200):
@@ -297,18 +297,20 @@ if __name__ == '__main__':
 
     log.info(matplotlib.get_backend()) # debug
 
-    # TODO: visualize the top 25 eigenfaces
+    # DONE: visualize the top 25 eigenfaces
     log.info("faces_train.shape: " + str(faces_train.shape))  # (850, 6048) and sqrt(6084) = 78
     faces_train = np.reshape(faces_train, (-1, 78, 78))
     fig = plt.figure()
     fig.suptitle('Top 25 Eigenfaces')
     for i in range(0, 25):
         ax = fig.add_subplot(5, 5, i+1)
+
+        # log.info("faces_train[i, ...].shape: " + str(faces_train[i, ...].shape))
         ax.imshow(faces_train[i, ...])
 
-    fig.show()
+    plt.show(block=True)
 
-    print('Plotting training reconstruction error for various k')
+    log.info('Plotting training reconstruction error for various k')
     # TODO: plot the mean squared error of training set with
     # k=[5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
 
