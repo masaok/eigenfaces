@@ -99,16 +99,16 @@ print("Slide 34: Applying PCA to Handwritten Digits")
 # Let’s visualize what our reconstructed digits look like
 W = V[:, 0:45]
 
-# Project our data
+# Project our data (Slide 34)
 Z_train = np.matmul(B_train, W)  # (1617, 55)
 X_train_hat = np.matmul(Z_train, W.T)+mu_train
 
-# Visualize our data
-X_train = np.reshape(X_train, (-1, 8, 8))
+# Visualize our data (Slide 34)
+X_train = np.reshape(X_train, (-1, 8, 8))  # because each image has 64 pixels?
 X_train_hat = np.reshape(X_train_hat, (-1, 8, 8))
 fig = plt.figure()
-for i in range(0, 16):
-    ax = fig.add_subplot(4, 4, i+1)
+for i in range(0, 16):  # rendering 16 images total?
+    ax = fig.add_subplot(4, 4, i+1)  # 4 x 4 = 16 ?
     if i < 8:
         ax.imshow(X_train[i, ...])
     else:
