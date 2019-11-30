@@ -221,6 +221,8 @@ if __name__ == '__main__':
     faces_train = faces[0:N_TRAIN, ...]
     faces_test = faces[N_TRAIN::, ...]
 
+    X_train = faces_train
+
     log.info('Computing eigenfaces from training set (slide 28)')
     # DONE: obtain eigenfaces and eigenvalues
     mu_train = np.mean(faces_train, axis=0)
@@ -289,6 +291,7 @@ if __name__ == '__main__':
     # log.info("MSE: " + str(mse))
 
     # Plot and show
+    log.info("top_values.shape: " + str(top_values.shape))
     plt.plot(top_values)
     # plt.plot(W)  # Other way, as done in digits example?
     plt.show(block=True)  # Show the plot (python3 on Mac terminal)
@@ -313,6 +316,15 @@ if __name__ == '__main__':
     log.info('Plotting training reconstruction error for various k')
     # TODO: plot the mean squared error of training set with
     # k=[5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
+
+
+    W = V[:, 0:5]
+    Z_train = np.matmul(B_train, W)
+    X_train_hat = np.matmul(Z_train, W.T)+mu_train
+    mse = np.mean((X_train-X_train_hat)**2)
+
+    log.info("mse: " + str(mse))
+
 
     print('Reconstructing faces from projected faces in training set')
     # TODO: choose k and reconstruct training set
