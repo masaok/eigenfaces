@@ -317,13 +317,26 @@ if __name__ == '__main__':
     # TODO: plot the mean squared error of training set with
     # k=[5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
 
+    k_values = [5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
+    errors = []
 
-    W = V[:, 0:5]
-    Z_train = np.matmul(B_train, W)
-    X_train_hat = np.matmul(Z_train, W.T)+mu_train
-    mse = np.mean((X_train-X_train_hat)**2)
+    for k in k_values:
+        W = V[:, 0:k]
+        Z_train = np.matmul(B_train, W)
+        X_train_hat = np.matmul(Z_train, W.T)+mu_train
+        mse = np.mean((X_train-X_train_hat)**2)
 
-    log.info("mse: " + str(mse))
+        # log.info("mse: " + str(mse))
+
+        errors.append(mse)
+        # errors.append([k, mse])
+
+    log.info("errors: " + str(errors))
+    plt.title("Mean Squared Error of training set with various K values")
+    plt.plot(k_values, errors)
+    plt.xlabel('K values')
+    plt.ylabel('MSE')
+    plt.show(block=True)  # Show the plot (python3 on Mac terminal)
 
 
     print('Reconstructing faces from projected faces in training set')
@@ -340,6 +353,6 @@ if __name__ == '__main__':
     # TODO: plot the mean squared error of testing set with
     # k=[5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
 
-    print('Creating synethic faces')
+    print('Creating synthetic faces')
     # TODO: synthesize and visualize new faces based on the distribution of the latent variables
     # you may choose another k that you find suitable
