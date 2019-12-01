@@ -133,6 +133,7 @@ def mean_squared_error(x, x_hat):
 
       returns mean squared error
     """
+    return np.mean((x - x_hat)**2)
 
 
 def plot_eigenvalues(eigenvalues):
@@ -222,6 +223,7 @@ if __name__ == '__main__':
     faces_test = faces[N_TRAIN::, ...]
 
     X_train = faces_train
+    X_test = faces_test
 
     log.info('Computing eigenfaces from training set (slide 28)')
     # DONE: obtain eigenfaces and eigenvalues
@@ -270,30 +272,18 @@ if __name__ == '__main__':
     top_values = np.flip(top_values)
 
     # # Another way to sort?
-    # order = np.argsort(S)[::-1]
-    # V = V[:, order]
+    # order = np.argsort(S)[-1]
+    # S = S[:, order]
 
     # Get the top 200
     top_values = S[0:200]
 
-    # Alternate way?
-    # W = V[:, 0:200]  # Transformation for projecting X to subspace
-
-    # Project our data
-    # Z_train = np.matmul(B_train, W)  # (850, 200)
-    # log.info("Z_train.shape: " + str(Z_train.shape))
-
-    # X_train_hat = np.matmul(Z_train, W.T)+mu_train  # (850, 6084)
-    # log.info("X_train_hat.shape: " + str(X_train_hat.shape))
-
-    # X_train = faces_train
-    # mse = np.mean((X_train-X_train_hat)**2)
-    # log.info("MSE: " + str(mse))
-
     # Plot and show
     log.info("top_values.shape: " + str(top_values.shape))
+    plt.title("Top 200 Eigenvalues")
+    plt.xlabel('Ranking')
+    plt.ylabel('Eigenvalues')
     plt.plot(top_values)
-    # plt.plot(W)  # Other way, as done in digits example?
     plt.show(block=True)  # Show the plot (python3 on Mac terminal)
 
     log.info('Visualizing the top 25 eigenfaces')
@@ -302,7 +292,10 @@ if __name__ == '__main__':
 
     # DONE: visualize the top 25 eigenfaces
     log.info("faces_train.shape: " + str(faces_train.shape))  # (850, 6048) and sqrt(6084) = 78
+    log.info("faces_train.dtype: " + str(faces_train.dtype))
     faces_train = np.reshape(faces_train, (-1, 78, 78))
+    log.info("faces_train.shape: " + str(faces_train.shape))  # (850, 78, 78)
+    log.info("faces_train.dtype: " + str(faces_train.dtype))
     fig = plt.figure()
     fig.suptitle('Top 25 Eigenfaces')
     for i in range(0, 25):
@@ -314,17 +307,24 @@ if __name__ == '__main__':
     plt.show(block=True)
 
     log.info('Plotting training reconstruction error for various k')
-    # TODO: plot the mean squared error of training set with
+    # DONE: plot the mean squared error of training set with
     # k=[5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
 
     k_values = [5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
     errors = []
 
     for k in k_values:
+        log.info('k: ' + str(k))
         W = V[:, 0:k]
+        # log.info("W.shape: " + str(W.shape))
+        # log.info("W.dtype: " + str(W.dtype))
+
         Z_train = np.matmul(B_train, W)
+        # log.info("Z_train.shape: " + str(Z_train.shape))
+        # log.info("Z_train.dtype: " + str(Z_train.dtype))
+
         X_train_hat = np.matmul(Z_train, W.T)+mu_train
-        mse = np.mean((X_train-X_train_hat)**2)
+        mse = mean_squared_error(X_train, X_train_hat)
 
         # log.info("mse: " + str(mse))
 
@@ -333,19 +333,44 @@ if __name__ == '__main__':
 
     log.info("errors: " + str(errors))
     plt.title("Mean Squared Error of training set with various K values")
-    plt.plot(k_values, errors)
     plt.xlabel('K values')
     plt.ylabel('MSE')
+    plt.plot(k_values, errors)
     plt.show(block=True)  # Show the plot (python3 on Mac terminal)
 
 
     print('Reconstructing faces from projected faces in training set')
-    # TODO: choose k and reconstruct training set
+    # DONE: choose k and reconstruct training set
+    k = 50
 
-    # TODO: visualize the reconstructed faces from training set
+    W = V[:, 0:k].real  # converts complex128 to float64 (needed for imshow to work later)
+    log.info("W.shape: " + str(W.shape))
+    log.info("W.dtype: " + str(W.dtype))
+
+    Z_train = np.matmul(B_train, W)
+    X_train_hat = np.matmul(Z_train, W.T)+mu_train
+    log.info("X_train_hat.shape: " + str(X_train_hat.shape))  # (850, 6084)
+
+    X_train_hat = np.reshape(X_train_hat, (-1, 78, 78))
+    log.info("X_train_hat.shape: " + str(X_train_hat.shape))  # (850, 78, 78)
+    log.info("X_train_hat.dtype: " + str(X_train_hat.dtype))
+
+    # DONE: visualize the reconstructed faces from training set
+    fig = plt.figure()
+    fig.suptitle('Top 25 Eigenfaces')
+    for i in range(0, 25):
+        ax = fig.add_subplot(5, 5, i+1)
+        ax.imshow(X_train_hat[i, ...])
+
+    plt.show(block=True)
 
     print('Reconstructing faces from projected faces in testing set')
     # TODO: reconstruct faces from the projected faces
+
+    # mu_test = np.mean(X_test, axis=0)
+    # B_test = X_test - mu_test
+    # C = np.matmul(B_test.T, B_test)/(B_test.shape[0])
+
 
     # TODO: visualize the reconstructed faces from training set
 
@@ -353,6 +378,6 @@ if __name__ == '__main__':
     # TODO: plot the mean squared error of testing set with
     # k=[5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
 
-    print('Creating synthetic faces')
+    print('Creating synthetic faces (Slide 38)')
     # TODO: synthesize and visualize new faces based on the distribution of the latent variables
     # you may choose another k that you find suitable
