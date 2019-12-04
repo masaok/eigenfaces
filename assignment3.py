@@ -380,10 +380,12 @@ if __name__ == '__main__':
     plt.xlabel('K values')
     plt.ylabel('MSE')
     plt.plot(k_values, errors)
-    plt.show(block=True)  # Show the plot (python3 on Mac terminal)
+    plt.show(block=True)  # Show MSE plot
 
     print('Reconstructing faces from projected faces in training set')
-    # DONE: choose k and reconstruct training set
+    # TODO: choose k and reconstruct training set
+    # TODO: waiting on Dr. Wong's response
+
     k = 50
 
     W = V[:, 0:k].real  # converts complex128 to float64 (needed for imshow to work later)
@@ -398,7 +400,7 @@ if __name__ == '__main__':
     log.info("X_train_hat.shape: " + str(X_train_hat.shape))  # (850, 78, 78)
     log.info("X_train_hat.dtype: " + str(X_train_hat.dtype))
 
-    # DONE: visualize the reconstructed faces from training set
+    # TODO: visualize the reconstructed faces from training set
     fig = plt.figure()
     fig.suptitle('Top 25 Eigenfaces')
     for i in range(0, 25):
