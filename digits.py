@@ -104,7 +104,9 @@ Z_train = np.matmul(B_train, W)  # (1617, 55)
 X_train_hat = np.matmul(Z_train, W.T)+mu_train
 
 # Visualize our data (Slide 34)
+print("X_train.shape: " + str(X_train.shape))
 X_train = np.reshape(X_train, (-1, 8, 8))  # because each image has 64 pixels?
+print("X_train.shape (after reshape): " + str(X_train.shape))
 X_train_hat = np.reshape(X_train_hat, (-1, 8, 8))
 fig = plt.figure()
 for i in range(0, 16):  # rendering 16 images total?

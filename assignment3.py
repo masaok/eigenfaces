@@ -74,15 +74,18 @@ def get_eigenfaces(eigenvalues, eigenvectors, k):
 
     # sort eigenvalues
     order = np.argsort(-eigenvalues)
+    log.info("order: " + str(order))
 
     # take order
     values = eigenvalues[order]
+    log.info("values: " + str(values))
 
     # sort eigenvectors
     vectors = eigenvectors[:, order]
+    log.info("vectors: " + str(vectors))
 
     # select from 0 to k
-    eigenfaces = vectors[0:k]
+    eigenfaces = vectors[:, 0:k].real
 
     return eigenfaces
 
@@ -100,6 +103,16 @@ def project(faces, faces_mean, eigenfaces):
 
       returns N x k vector
     """
+    # np.matmul(B, W)
+
+    # B = X - mu
+
+    # B = faces
+    # mu = faces_mean
+    # W = eigenfaces
+
+    B = faces - faces_mean
+    return np.matmul(B, W)
 
 
 def reconstruct(faces_projected, faces_mean, eigenfaces):
@@ -115,6 +128,10 @@ def reconstruct(faces_projected, faces_mean, eigenfaces):
 
       returns N x d vector
     """
+    # X_hat = reconstructed faces
+
+    Z = B * W
+    X_hat = Z * W.T + mu
 
 
 def synthesize(eigenfaces, variances, faces_mean, k=50, n=25):
@@ -129,6 +146,15 @@ def synthesize(eigenfaces, variances, faces_mean, k=50, n=25):
 
       returns synthesized faces
     """
+
+    # X_hat = Z * W.T + mean
+    #X_hat = np.matmul(Z)
+
+    # Z = BW
+
+    # W is eigenfaces which projects
+
+    # W.T will project back to original space
 
 
 def mean_squared_error(x, x_hat):
@@ -303,29 +329,25 @@ if __name__ == '__main__':
 
     log.info(matplotlib.get_backend())  # debug
 
-    # DONE: visualize the top 25 eigenfaces
-    log.info("faces_train.shape: " + str(faces_train.shape))  # (850, 6048) and sqrt(6084) = 78
-    log.info("faces_train.dtype: " + str(faces_train.dtype))
-    faces_train = np.reshape(faces_train, (-1, 78, 78))
-    log.info("faces_train.shape: " + str(faces_train.shape))  # (850, 78, 78)
-    log.info("faces_train.dtype: " + str(faces_train.dtype))
+    log.info("SHOW EIGENFACES (function)")
     fig = plt.figure()
+    fig.suptitle('Top 25 Eigenfaces (function)')
+
+    eigenfaces = get_eigenfaces(S, V, k)
+    log.info("eigenfaces.shape: " + str(eigenfaces.shape))
+
+    eigenfaces = eigenfaces.T
+    log.info("eigenfaces.T.shape: " + str(eigenfaces.shape))
+
+    eigenfaces = np.reshape(eigenfaces, (-1, 78, 78))
+    log.info("eigenfaces.shape after reshape: " + str(eigenfaces.shape))
 
     k = 25
-    fig.suptitle('Top 25 Eigenfaces')
     for i in range(0, k):
         ax = fig.add_subplot(5, 5, i+1)
+        ax.imshow(eigenfaces[i, ...], cmap='gray')
 
-        # log.info("faces_train[i, ...].shape: " + str(faces_train[i, ...].shape))
-        ax.imshow(faces_train[i, ...])
-
-    log.info("SHOW EIGENFACES (main)")
-    plt.show(block=True)  # Show Top eigenfaces
-
-    log.info("SHOW EIGENFACES (function)")
-    eigenfaces = get_eigenfaces(S, V, k)
-    plt.plot(eigenfaces)
-    fig = plt.figure()
+    # plt.plot(eigenfaces)
     plt.show(block=True)  # Show eigenfaces
 
     log.info('Plotting training reconstruction error for various k')
@@ -396,7 +418,18 @@ if __name__ == '__main__':
 
     print('Plotting testing reconstruction error for various k')
     # TODO: plot the mean squared error of testing set with
-    # k=[5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
+    k_list = [5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
+
+    # mses = []
+    # for k in k_list:
+    #     eigenfaces_k = get_eigenfaces(....)
+    #     z_k = np.matmul(B_train, eigenfaces)
+    #     x_hat_k = np.matmul(z_k, eigenfaces_k) + mu_train
+    #     mse = (1/N)(x_hat_k - X_train) ** 2
+
+    # plot the mse values
+    # error should decrease over time
+    # plot_reconstruction_error(mses, k)
 
     print('Creating synthetic faces (Slide 38)')
     # TODO: synthesize and visualize new faces based on the distribution of the latent variables
