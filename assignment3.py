@@ -73,11 +73,18 @@ def get_eigenfaces(eigenvalues, eigenvectors, k):
     """
 
     # sort eigenvalues
+    order = np.argsort(-eigenvalues)
+
     # take order
+    values = eigenvalues[order]
+
     # sort eigenvectors
+    vectors = eigenvectors[:, order]
+
     # select from 0 to k
-    # eigenvectors
-    # return eigenfaces ?
+    eigenfaces = vectors[0:k]
+
+    return eigenfaces
 
 
 def project(faces, faces_mean, eigenfaces):
@@ -222,6 +229,9 @@ if __name__ == '__main__':
     faces_train = faces[0:N_TRAIN, ...]
     faces_test = faces[N_TRAIN::, ...]
 
+    log.info("faces_train.shape: " + str(faces_train.shape))
+    log.info("faces_test.shape: " + str(faces_test.shape))
+
     X_train = faces_train
     X_test = faces_test
 
@@ -233,6 +243,8 @@ if __name__ == '__main__':
     B_train = faces_train - mu_train
     log.info("B_train.shape: " + str(B_train.shape))
     log.info("B_train.shape[0]: " + str(B_train.shape[0]))
+
+    log.info("np.matmul(B_train.T, B_train).shape: " + str(np.matmul(B_train.T, B_train).shape))
 
     # Find the covariance matrix (slide 28)
     # (850, 6084) x (6084, 850) => (6084, 6084)
@@ -276,7 +288,8 @@ if __name__ == '__main__':
     # S = S[:, order]
 
     # Get the top 200
-    top_values = S[0:200]
+    k = 200
+    top_values = S[0:k]
 
     # Plot and show
     log.info("top_values.shape: " + str(top_values.shape))
@@ -284,11 +297,11 @@ if __name__ == '__main__':
     plt.xlabel('Ranking')
     plt.ylabel('Eigenvalues')
     plt.plot(top_values)
-    plt.show(block=True)  # Show the plot (python3 on Mac terminal)
+    plt.show(block=True)  # Show top eigenvalues
 
     log.info('Visualizing the top 25 eigenfaces')
 
-    log.info(matplotlib.get_backend()) # debug
+    log.info(matplotlib.get_backend())  # debug
 
     # DONE: visualize the top 25 eigenfaces
     log.info("faces_train.shape: " + str(faces_train.shape))  # (850, 6048) and sqrt(6084) = 78
@@ -297,14 +310,23 @@ if __name__ == '__main__':
     log.info("faces_train.shape: " + str(faces_train.shape))  # (850, 78, 78)
     log.info("faces_train.dtype: " + str(faces_train.dtype))
     fig = plt.figure()
+
+    k = 25
     fig.suptitle('Top 25 Eigenfaces')
-    for i in range(0, 25):
+    for i in range(0, k):
         ax = fig.add_subplot(5, 5, i+1)
 
         # log.info("faces_train[i, ...].shape: " + str(faces_train[i, ...].shape))
         ax.imshow(faces_train[i, ...])
 
-    plt.show(block=True)
+    log.info("SHOW EIGENFACES (main)")
+    plt.show(block=True)  # Show Top eigenfaces
+
+    log.info("SHOW EIGENFACES (function)")
+    eigenfaces = get_eigenfaces(S, V, k)
+    plt.plot(eigenfaces)
+    fig = plt.figure()
+    plt.show(block=True)  # Show eigenfaces
 
     log.info('Plotting training reconstruction error for various k')
     # DONE: plot the mean squared error of training set with
@@ -338,7 +360,6 @@ if __name__ == '__main__':
     plt.plot(k_values, errors)
     plt.show(block=True)  # Show the plot (python3 on Mac terminal)
 
-
     print('Reconstructing faces from projected faces in training set')
     # DONE: choose k and reconstruct training set
     k = 50
@@ -370,7 +391,6 @@ if __name__ == '__main__':
     # mu_test = np.mean(X_test, axis=0)
     # B_test = X_test - mu_test
     # C = np.matmul(B_test.T, B_test)/(B_test.shape[0])
-
 
     # TODO: visualize the reconstructed faces from training set
 
