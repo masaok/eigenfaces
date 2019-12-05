@@ -21,8 +21,18 @@ import os.path
 Name: Kitamura, Masao
 
 Collaborators: Huerta, Emilia
+               Wong, Alex
+               Abdelalim
 
-Collaboration details: Discussed <function name> implementation details with Jane Doe.
+Collaboration details: Discussed all implementation details with all collaborators.
+
+Notes:
+
+Three use cases of PCA:
+
+1. Compression/decompression
+2. Synthesizing new faces
+3. Removing dimensions that are not useful
 """
 
 CELEBA_DIRPATH = 'celebA_dataset'
@@ -367,7 +377,7 @@ if __name__ == '__main__':
         # log.info("Z_train.shape: " + str(Z_train.shape))
         # log.info("Z_train.dtype: " + str(Z_train.dtype))
 
-        X_train_hat = np.matmul(Z_train, W.T)+mu_train
+        X_train_hat = np.matmul(Z_train, W.T) + mu_train
         mse = mean_squared_error(X_train, X_train_hat)
 
         # log.info("mse: " + str(mse))
@@ -384,7 +394,12 @@ if __name__ == '__main__':
 
     print('Reconstructing faces from projected faces in training set')
     # TODO: choose k and reconstruct training set
-    # TODO: waiting on Dr. Wong's response
+
+    # Z is projected faces, and Z = BW
+    # W is eigenfaces with dimensions d x k
+    # B is centered faces (N x d) X (d x k) = N x k
+    # Therefore, Z has fewer dimensions
+    # Hence, B was projected to Z
 
     k = 50
 
@@ -392,20 +407,23 @@ if __name__ == '__main__':
     log.info("W.shape: " + str(W.shape))
     log.info("W.dtype: " + str(W.dtype))
 
+    # Project B to Z (compress)
     Z_train = np.matmul(B_train, W)
-    X_train_hat = np.matmul(Z_train, W.T)+mu_train
+
+    # Reconstruct (decompress)
+    X_train_hat = np.matmul(Z_train, W.T) + mu_train
     log.info("X_train_hat.shape: " + str(X_train_hat.shape))  # (850, 6084)
 
     X_train_hat = np.reshape(X_train_hat, (-1, 78, 78))
     log.info("X_train_hat.shape: " + str(X_train_hat.shape))  # (850, 78, 78)
     log.info("X_train_hat.dtype: " + str(X_train_hat.dtype))
 
-    # TODO: visualize the reconstructed faces from training set
+    # DONE: visualize the reconstructed faces from training set
     fig = plt.figure()
-    fig.suptitle('Top 25 Eigenfaces')
+    fig.suptitle('Reconstructing faces from projected faces in training set')
     for i in range(0, 25):
         ax = fig.add_subplot(5, 5, i+1)
-        ax.imshow(X_train_hat[i, ...])
+        ax.imshow(X_train_hat[i, ...], cmap='gray')
 
     plt.show(block=True)
 
