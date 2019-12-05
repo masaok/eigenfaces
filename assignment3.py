@@ -92,7 +92,7 @@ def get_eigenfaces(eigenvalues, eigenvectors, k):
 
     # sort eigenvectors
     vectors = eigenvectors[:, order]
-    log.info("vectors: " + str(vectors))
+    # log.info("vectors: " + str(vectors))
 
     # select from 0 to k
     eigenfaces = vectors[:, 0:k].real
@@ -204,7 +204,7 @@ def visualize_reconstructions(faces, faces_hat, n=4):
     fig.suptitle('Real Versus Reconstructed Faces')
 
 
-def plot_reconstruction_error(mses, k):
+def plot_reconstruction_error(mses, ks, name):
     """
       Plots the reconstruction errors
 
@@ -213,8 +213,13 @@ def plot_reconstruction_error(mses, k):
       ks : list
         list of k used
     """
-    fig = plt.figure()
-    fig.suptitle('Reconstruction Error')
+    # fig = plt.figure()
+    # fig.suptitle('Reconstruction Error: ' + str(name))
+    plt.title('Reconstruction Error: ' + str(name))
+    plt.xlabel('K values')
+    plt.ylabel('MSE')
+    plt.plot(ks, mses)
+    plt.show(block=True)
 
 
 def visualize_eigenfaces(eigenfaces):
@@ -369,15 +374,17 @@ if __name__ == '__main__':
 
     for k in k_values:
         log.info('k: ' + str(k))
-        W = V[:, 0:k]
-        # log.info("W.shape: " + str(W.shape))
-        # log.info("W.dtype: " + str(W.dtype))
+        W = V[:, 0:k]  # (6084, k)
+        log.info("W.shape: " + str(W.shape))
+        log.info("W.dtype: " + str(W.dtype))
 
-        Z_train = np.matmul(B_train, W)
-        # log.info("Z_train.shape: " + str(Z_train.shape))
+        Z_train = np.matmul(B_train, W)  # (850, k)
+        log.info("Z_train.shape: " + str(Z_train.shape))
         # log.info("Z_train.dtype: " + str(Z_train.dtype))
 
-        X_train_hat = np.matmul(Z_train, W.T) + mu_train
+        X_train_hat = np.matmul(Z_train, W.T) + mu_train # (850, 6084)
+        log.info("X_train_hat.shape: " + str(X_train_hat.shape))
+
         mse = mean_squared_error(X_train, X_train_hat)
 
         # log.info("mse: " + str(mse))
@@ -408,7 +415,8 @@ if __name__ == '__main__':
     log.info("W.dtype: " + str(W.dtype))
 
     # Project B to Z (compress)
-    Z_train = np.matmul(B_train, W)
+    Z_train = np.matmul(B_train, W) # (850, 50)
+    log.info("Z_train.shape: " + str(Z_train.shape))
 
     # Reconstruct (decompress)
     X_train_hat = np.matmul(Z_train, W.T) + mu_train
@@ -431,25 +439,49 @@ if __name__ == '__main__':
     # TODO: reconstruct faces from the projected faces
 
     # mu_test = np.mean(X_test, axis=0)
-    # B_test = X_test - mu_test
-    # C = np.matmul(B_test.T, B_test)/(B_test.shape[0])
+
+    B_test = X_test - mu_train  # According to Slack chat with Dr. Wong
+    C = np.matmul(B_test.T, B_test)/(B_test.shape[0])
+
+    # Project B to Z (compress)
+    Z_test = np.matmul(B_train, W) # (850, 50)
+    log.info("Z_test.shape: " + str(Z_test.shape))
+
+    # Reconstruct (decompress)
+    X_test_hat = np.matmul(Z_test, W.T) + mu_train
+    log.info("X_test_hat.shape: " + str(X_test_hat.shape))  # (850, 6084)
+
+    X_test_hat = np.reshape(X_test_hat, (-1, 78, 78))
+    log.info("X_test_hat.shape: " + str(X_test_hat.shape))  # (850, 78, 78)
+    log.info("X_test_hat.dtype: " + str(X_test_hat.dtype))
 
     # TODO: visualize the reconstructed faces from training set
+    fig = plt.figure()
+    fig.suptitle('Reconstructing faces from projected faces in testing set')
+    for i in range(0, 25):
+        ax = fig.add_subplot(5, 5, i+1)
+        ax.imshow(X_test_hat[i, ...], cmap='gray')
+
+    plt.show(block=True)
 
     print('Plotting testing reconstruction error for various k')
     # TODO: plot the mean squared error of testing set with
-    k_list = [5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
+    k_values = [5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
 
-    # mses = []
-    # for k in k_list:
-    #     eigenfaces_k = get_eigenfaces(....)
-    #     z_k = np.matmul(B_train, eigenfaces)
-    #     x_hat_k = np.matmul(z_k, eigenfaces_k) + mu_train
-    #     mse = (1/N)(x_hat_k - X_train) ** 2
+    mses = []
+    for k in k_values:
+        eigenfaces_k = get_eigenfaces(S, V, k) # (6084, k)
+        log.info("eigenfaces_k.shape: " + str(eigenfaces_k.shape))
 
-    # plot the mse values
-    # error should decrease over time
-    # plot_reconstruction_error(mses, k)
+        z_k = np.matmul(B_test, eigenfaces_k) # (150, k)
+        log.info("z_k.shape: " + str(z_k.shape))
+
+        x_hat_k = np.matmul(z_k, eigenfaces_k.T) + mu_train
+        #mse = (1/N)(x_hat_k - X_train) ** 2
+        mse = mean_squared_error(X_test, x_hat_k)
+        mses.append(mse)
+
+    plot_reconstruction_error(mses, k_values, "testing set")
 
     print('Creating synthetic faces (Slide 38)')
     # TODO: synthesize and visualize new faces based on the distribution of the latent variables
