@@ -166,6 +166,11 @@ def synthesize(eigenfaces, variances, faces_mean, k=50, n=25):
 
     # W.T will project back to original space
 
+    Z = np.random.normal(0, np.sqrt(variances[0:k]))
+    X_hat = np.matmul(Z, eigenfaces.T) + faces.mean
+
+    return X_hat
+
 
 def mean_squared_error(x, x_hat):
     """
@@ -486,3 +491,11 @@ if __name__ == '__main__':
     print('Creating synthetic faces (Slide 38)')
     # TODO: synthesize and visualize new faces based on the distribution of the latent variables
     # you may choose another k that you find suitable
+
+    k = 50
+    eigenfaces = get_eigenfaces(S, V, k)
+    # variances = ???
+    faces_mean = mu_train # ???
+    # X_hat = synthesize(eigenfaces, variances, faces_mean)
+    log.info("X_hat.shape: " + str(X_hat.shape))
+
