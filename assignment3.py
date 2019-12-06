@@ -113,16 +113,11 @@ def project(faces, faces_mean, eigenfaces):
 
       returns N x k vector
     """
-    # np.matmul(B, W)
-
-    # B = X - mu
-
-    # B = faces
-    # mu = faces_mean
-    # W = eigenfaces
-
+    # Center the faces
     B = faces - faces_mean
-    return np.matmul(B, W)
+
+    # Multiply centered faces with eigenfaces
+    return np.matmul(B, eigenfaces)
 
 
 def reconstruct(faces_projected, faces_mean, eigenfaces):
@@ -138,10 +133,7 @@ def reconstruct(faces_projected, faces_mean, eigenfaces):
 
       returns N x d vector
     """
-    # X_hat = reconstructed faces
-
-    Z = B * W
-    X_hat = Z * W.T + mu
+    return np.matmul(faces_projected, eigenfaces.T) + faces_mean
 
 
 def synthesize(eigenfaces, variances, faces_mean, k=50, n=25):
@@ -156,25 +148,16 @@ def synthesize(eigenfaces, variances, faces_mean, k=50, n=25):
 
       returns synthesized faces
     """
-
-    # X_hat = Z * W.T + mean
-    # X_hat = np.matmul(Z)
-
-    # Z = BW
-
-    # W is eigenfaces which projects
-
-    # W.T will project back to original space
     log.info("variances.shape: " + str(variances.shape))
 
-    Z = np.random.normal(0, 
-        np.sqrt(variances[0:k]), 
-        (n, variances[0:k].shape[0]))
+    Z = np.random.normal(0,
+                         np.sqrt(variances[0:k]),
+                         (n, variances[0:k].shape[0]))
 
     log.info("Z.shape: " + str(Z.shape))
     log.info("eigenfaces.T.shape: " + str(eigenfaces.T.shape))
 
-    X_hat=np.matmul(Z, eigenfaces.T) + faces_mean
+    X_hat = np.matmul(Z, eigenfaces.T) + faces_mean
     return X_hat
 
 
@@ -196,8 +179,12 @@ def plot_eigenvalues(eigenvalues):
 
       eigenvalues : 1 x d vector
     """
-    fig=plt.figure()
+    fig = plt.figure()
     fig.suptitle('Eigenvalues Versus Principle Components')
+    plt.xlabel('Principle Components')
+    plt.ylabel('Eigenvalues')
+    plt.plot(eigenvalues)
+    plt.show(block=True)
 
 
 def visualize_reconstructions(faces, faces_hat, label="", n=4):
@@ -211,11 +198,11 @@ def visualize_reconstructions(faces, faces_hat, label="", n=4):
       faces_hat : 1 x d vector
         images reconstructed faces
     """
-    fig=plt.figure()
+    fig = plt.figure()
     fig.suptitle('Real Versus Reconstructed Faces: ' + label)
 
     for i in range(0, n * 2):
-        ax=fig.add_subplot(2, n, i+1)
+        ax = fig.add_subplot(2, n, i+1)
         if i < n:
             ax.imshow(faces[i, ...], cmap='gray')
         else:
@@ -233,8 +220,6 @@ def plot_reconstruction_error(mses, ks, name):
       ks : list
         list of k used
     """
-    # fig = plt.figure()
-    # fig.suptitle('Reconstruction Error: ' + str(name))
     plt.title('Reconstruction Error: ' + str(name))
     plt.xlabel('K values')
     plt.ylabel('MSE')
@@ -250,8 +235,15 @@ def visualize_eigenfaces(eigenfaces):
 
       eigenfaces : d x k vector
     """
-    fig=plt.figure()
+    fig = plt.figure()
     fig.suptitle('Top 25 Eigenfaces')
+
+    k = 25
+    for i in range(0, k):
+        ax = fig.add_subplot(5, 5, i+1)
+        ax.imshow(eigenfaces[i, ...], cmap='gray')
+
+    plt.show(block=True)
 
 
 def visualize_synthetic_faces(faces):
@@ -273,41 +265,41 @@ def visualize_synthetic_faces(faces):
 
 if __name__ == '__main__':
     # Load faces from directory
-    face_image_paths=glob.glob(os.path.join(CELEBA_DIRPATH, '*.jpg'))
+    face_image_paths = glob.glob(os.path.join(CELEBA_DIRPATH, '*.jpg'))
 
     print('Loading {} images from {}'.format(len(face_image_paths), CELEBA_DIRPATH))
     # Read images as grayscale and resize from (128, 128) to (78, 78)
-    faces=[]
+    faces = []
     for path in face_image_paths:
-        im=Image.open(path).convert('L').resize((N_WIDTH, N_HEIGHT))
+        im = Image.open(path).convert('L').resize((N_WIDTH, N_HEIGHT))
         faces.append(np.asarray(im))
-    faces=np.asarray(faces)  # (1000, 78, 78)
+    faces = np.asarray(faces)  # (1000, 78, 78)
     # Normalize faces between 0 and 1
-    faces=faces/255.0
+    faces = faces/255.0
 
     log.info('Vectorizing faces into N x d matrix')
     # DONE: Reshape the faces to into an N x d matrix (slide 26)
     log.info(faces)
     log.info(faces.shape)  # (1000, 78, 78)
-    faces=np.reshape(faces, (-1, 6084))  # 78 * 78 = 6084
+    faces = np.reshape(faces, (-1, 6084))  # 78 * 78 = 6084
 
     log.info('Splitting dataset into {} for training and {} for testing'.format(
         N_TRAIN, faces.shape[0]-N_TRAIN))
-    faces_train=faces[0:N_TRAIN, ...]
-    faces_test=faces[N_TRAIN::, ...]
+    faces_train = faces[0:N_TRAIN, ...]
+    faces_test = faces[N_TRAIN::, ...]
 
     log.info("faces_train.shape: " + str(faces_train.shape))
     log.info("faces_test.shape: " + str(faces_test.shape))
 
-    X_train=faces_train
-    X_test=faces_test
+    X_train = faces_train
+    X_test = faces_test
 
     log.info('Computing eigenfaces from training set (slide 28)')
     # DONE: obtain eigenfaces and eigenvalues
-    mu_train=np.mean(faces_train, axis=0)
+    mu_train = np.mean(faces_train, axis=0)
     log.info("mu_train.shape: " + str(mu_train.shape))
 
-    B_train=faces_train - mu_train
+    B_train = faces_train - mu_train
     log.info("B_train.shape: " + str(B_train.shape))
     log.info("B_train.shape[0]: " + str(B_train.shape[0]))
 
@@ -315,107 +307,78 @@ if __name__ == '__main__':
 
     # Find the covariance matrix (slide 28)
     # (850, 6084) x (6084, 850) => (6084, 6084)
-    C=np.matmul(B_train.T, B_train)/(B_train.shape[0])
+    C = np.matmul(B_train.T, B_train)/(B_train.shape[0])
     log.info("C.shape: " + str(C.shape))
 
     # Cache locally
-    sigmafile="data_sigma.npy"
-    vectorfile="data_vectors.npy"
-
+    sigmafile = "data_sigma.npy"
+    vectorfile = "data_vectors.npy"
     if os.path.isfile(sigmafile) and os.path.isfile(vectorfile):
         log.info("Cache files exist")
-        S=np.load(sigmafile)
-        V=np.load(vectorfile)
+        S = np.load(sigmafile)
+        V = np.load(vectorfile)
     else:
         log.info("Cache files do not exist")
         # Eigen decomposition
-        S, V=np.linalg.eig(C)
+        S, V = np.linalg.eig(C)
         np.save(sigmafile, S)
         np.save(vectorfile, V)
 
     log.info('Plotting the eigenvalues from largest to smallest')
     # DONE: plot the first 200 eigenvalues from largest to smallest
 
-    # fig = plt.figure()
-    # for i in range(1, 200):
-    # ax = fig.add_subplot()
-
-    log.info(S)
-    log.info(V)
-
     log.info("S.shape: " + str(S.shape))  # (6084,)
     log.info("V.shape: " + str(V.shape))  # (6084, 6084)
 
     # Sort the values in descending order
-    top_values=np.sort(S)
-    top_values=np.flip(top_values)
-
-    # # Another way to sort?
-    # order = np.argsort(S)[-1]
-    # S = S[:, order]
+    top_values = np.sort(S)
+    top_values = np.flip(top_values)
 
     # Get the top 200
-    k=200
-    top_values=S[0:k]
+    k = 200
+    top_values = S[0:k]
 
     # Plot and show
-    log.info("top_values.shape: " + str(top_values.shape))
-    plt.title("Top 200 Eigenvalues")
-    plt.xlabel('Ranking')
-    plt.ylabel('Eigenvalues')
-    plt.plot(top_values)
-    plt.show(block=True)  # Show top eigenvalues
+    plot_eigenvalues(top_values)
 
     log.info('Visualizing the top 25 eigenfaces')
 
-    log.info(matplotlib.get_backend())  # debug
-
-    log.info("SHOW EIGENFACES (function)")
-    fig=plt.figure()
-    fig.suptitle('Top 25 Eigenfaces (function)')
-
-    eigenfaces=get_eigenfaces(S, V, k)
+    # Get eigenfaces based on decomposition and k
+    # Eigenfaces are the eigenvectors for the faces set
+    eigenfaces = get_eigenfaces(S, V, k)
     log.info("eigenfaces.shape: " + str(eigenfaces.shape))
 
-    eigenfaces=eigenfaces.T
+    eigenfaces = eigenfaces.T
     log.info("eigenfaces.T.shape: " + str(eigenfaces.shape))
 
-    eigenfaces=np.reshape(eigenfaces, (-1, 78, 78))
+    eigenfaces = np.reshape(eigenfaces, (-1, 78, 78))
     log.info("eigenfaces.shape after reshape: " + str(eigenfaces.shape))
 
-    k=25
-    for i in range(0, k):
-        ax=fig.add_subplot(5, 5, i+1)
-        ax.imshow(eigenfaces[i, ...], cmap='gray')
-
-    # plt.plot(eigenfaces)
-    plt.show(block=True)  # Show eigenfaces
+    visualize_eigenfaces(eigenfaces)
 
     log.info('Plotting training reconstruction error for various k')
     # DONE: plot the mean squared error of training set with
-    # k=[5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
 
-    k_values=[5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
-    errors=[]
+    k_values = [5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
+    errors = []
 
     for k in k_values:
         log.info('k: ' + str(k))
-        W=V[:, 0:k]  # (6084, k)
-        # log.info("W.shape: " + str(W.shape))
-        # log.info("W.dtype: " + str(W.dtype))
+        W = V[:, 0:k]  # (6084, k)
 
-        Z_train=np.matmul(B_train, W)  # (850, k)
-        # log.info("Z_train.shape: " + str(Z_train.shape))
-        # log.info("Z_train.dtype: " + str(Z_train.dtype))
+        # Project B to Z
+        # Z_train = np.matmul(B_train, W)  # (850, k)
+        Z_train = project(faces_train, mu_train, W)  # (850, k)
 
-        X_train_hat=np.matmul(Z_train, W.T) + mu_train  # (850, 6084)
-        # log.info("X_train_hat.shape: " + str(X_train_hat.shape))
+        # Recontruct Z to X_hat
+        # X_train_hat = np.matmul(Z_train, W.T) + mu_train  # (850, 6084)
+        X_train_hat = reconstruct(Z_train, mu_train, W)  # (850, 6084)
 
-        mse=mean_squared_error(X_train, X_train_hat)
-        # log.info("mse: " + str(mse))
+        # Measure loss
+        mse = mean_squared_error(X_train, X_train_hat)
 
+        # Append to array
         errors.append(mse)
-        # errors.append([k, mse])
 
     log.info("errors: " + str(errors))
     plt.title("Mean Squared Error of training set with various K values")
@@ -433,25 +396,25 @@ if __name__ == '__main__':
     # Therefore, Z has fewer dimensions
     # Hence, B was projected to Z
 
-    k=50
+    k = 50
 
-    W=V[:, 0:k].real  # converts complex128 to float64 (needed for imshow to work later)
+    W = V[:, 0:k].real  # converts complex128 to float64 (needed for imshow to work later)
     log.info("W.shape: " + str(W.shape))
     log.info("W.dtype: " + str(W.dtype))
 
     # Project B to Z (compress)
-    Z_train=np.matmul(B_train, W)  # (850, 50)
+    Z_train = np.matmul(B_train, W)  # (850, 50)
     log.info("Z_train.shape: " + str(Z_train.shape))
 
     # Reconstruct (decompress)
-    X_train_hat=np.matmul(Z_train, W.T) + mu_train
+    X_train_hat = np.matmul(Z_train, W.T) + mu_train
     log.info("X_train_hat.shape: " + str(X_train_hat.shape))  # (850, 6084)
 
-    X_train_hat=np.reshape(X_train_hat, (-1, 78, 78))
+    X_train_hat = np.reshape(X_train_hat, (-1, 78, 78))
     log.info("X_train_hat.shape: " + str(X_train_hat.shape))  # (850, 78, 78)
     log.info("X_train_hat.dtype: " + str(X_train_hat.dtype))
 
-    X_train_faces=np.reshape(X_train, (-1, 78, 78))
+    X_train_faces = np.reshape(X_train, (-1, 78, 78))
 
     # DONE: visualize the reconstructed faces from training set
     visualize_reconstructions(X_train_faces, X_train_hat, "training set")
@@ -461,39 +424,38 @@ if __name__ == '__main__':
 
     # mu_test = np.mean(X_test, axis=0)
 
-    B_test=X_test - mu_train  # According to Slack chat with Dr. Wong
-    C=np.matmul(B_test.T, B_test)/(B_test.shape[0])
+    B_test = X_test - mu_train  # According to Slack chat with Dr. Wong
+    C = np.matmul(B_test.T, B_test)/(B_test.shape[0])
 
     # Project B to Z (compress)
-    Z_test=np.matmul(B_test, W)  # (850, 50)
+    Z_test = np.matmul(B_test, W)  # (850, 50)
     log.info("Z_test.shape: " + str(Z_test.shape))
 
     # Reconstruct (decompress)
-    X_test_hat=np.matmul(Z_test, W.T) + mu_train
+    X_test_hat = np.matmul(Z_test, W.T) + mu_train
     log.info("X_test_hat.shape: " + str(X_test_hat.shape))  # (850, 6084)
 
-    X_test_hat=np.reshape(X_test_hat, (-1, 78, 78))
+    X_test_hat = np.reshape(X_test_hat, (-1, 78, 78))
     log.info("X_test_hat.shape: " + str(X_test_hat.shape))  # (850, 78, 78)
     log.info("X_test_hat.dtype: " + str(X_test_hat.dtype))
 
-    X_test_faces=np.reshape(X_test, (-1, 78, 78))
+    X_test_faces = np.reshape(X_test, (-1, 78, 78))
 
     # TODO: visualize the reconstructed faces from testing set
     visualize_reconstructions(X_test_faces, X_test_hat, "testing set")
 
     print('Plotting testing reconstruction error for various k')
     # TODO: plot the mean squared error of testing set with
-    k_values=[5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
+    k_values = [5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
 
-    mses=[]
+    mses = []
     for k in k_values:
-        W=V[:, 0:k]  # (6084, k)
+        W = V[:, 0:k]  # (6084, k)
 
-        z_k=np.matmul(B_test, W)  # (150, k)
-        log.info("z_k.shape: " + str(z_k.shape))
+        z_k = np.matmul(B_test, W)  # (150, k)
 
-        x_hat_k=np.matmul(z_k, W.T) + mu_train
-        mse=mean_squared_error(X_test, x_hat_k)
+        x_hat_k = np.matmul(z_k, W.T) + mu_train
+        mse = mean_squared_error(X_test, x_hat_k)
         mses.append(mse)
 
     plot_reconstruction_error(mses, k_values, "testing set")
@@ -502,11 +464,11 @@ if __name__ == '__main__':
     # TODO: synthesize and visualize new faces based on the distribution of the latent variables
     # you may choose another k that you find suitable
 
-    k=50
-    eigenfaces=get_eigenfaces(S, V, k)
-    # variances = np.sqrt(S)
+    k = 50
+    eigenfaces = get_eigenfaces(S, V, k)
+    variances = S.real
     faces_mean = mu_train
-    X_hat = synthesize(eigenfaces, S.real, faces_mean)
+    X_hat = synthesize(eigenfaces, variances, faces_mean)
     log.info("X_hat.shape: " + str(X_hat.shape))
 
     X_hat = np.reshape(X_hat, (-1, 78, 78))
