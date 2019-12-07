@@ -82,17 +82,11 @@ def get_eigenfaces(eigenvalues, eigenvectors, k):
       returns d x k vector
     """
 
-    # sort eigenvalues
+    # sort eigenvalues (to be used on the eigenvectors)
     order = np.argsort(-eigenvalues)
-    log.info("order: " + str(order))
-
-    # take order
-    values = eigenvalues[order]
-    log.info("values: " + str(values))
 
     # sort eigenvectors
     vectors = eigenvectors[:, order]
-    # log.info("vectors: " + str(vectors))
 
     # select from 0 to k
     eigenfaces = vectors[:, 0:k].real
@@ -267,7 +261,7 @@ if __name__ == '__main__':
     # Load faces from directory
     face_image_paths = glob.glob(os.path.join(CELEBA_DIRPATH, '*.jpg'))
 
-    print('Loading {} images from {}'.format(len(face_image_paths), CELEBA_DIRPATH))
+    log.info('Loading {} images from {}'.format(len(face_image_paths), CELEBA_DIRPATH))
     # Read images as grayscale and resize from (128, 128) to (78, 78)
     faces = []
     for path in face_image_paths:
@@ -363,15 +357,13 @@ if __name__ == '__main__':
     errors = []
 
     for k in k_values:
-        log.info('k: ' + str(k))
+        # log.info('k: ' + str(k))
         W = V[:, 0:k]  # (6084, k)
 
         # Project B to Z
-        # Z_train = np.matmul(B_train, W)  # (850, k)
         Z_train = project(faces_train, mu_train, W)  # (850, k)
 
         # Recontruct Z to X_hat
-        # X_train_hat = np.matmul(Z_train, W.T) + mu_train  # (850, 6084)
         X_train_hat = reconstruct(Z_train, mu_train, W)  # (850, 6084)
 
         # Measure loss
@@ -387,8 +379,8 @@ if __name__ == '__main__':
     plt.plot(k_values, errors)
     plt.show(block=True)  # Show MSE plot
 
-    print('Reconstructing faces from projected faces in training set')
-    # TODO: choose k and reconstruct training set
+    log.info('Reconstructing faces from projected faces in training set')
+    # DONE: choose k and reconstruct training set
 
     # Z is projected faces, and Z = BW
     # W is eigenfaces with dimensions d x k
@@ -419,8 +411,8 @@ if __name__ == '__main__':
     # DONE: visualize the reconstructed faces from training set
     visualize_reconstructions(X_train_faces, X_train_hat, "training set")
 
-    print('Reconstructing faces from projected faces in testing set')
-    # TODO: reconstruct faces from the projected faces
+    log.info('Reconstructing faces from projected faces in testing set')
+    # DONE: reconstruct faces from the projected faces
 
     # mu_test = np.mean(X_test, axis=0)
 
@@ -441,11 +433,11 @@ if __name__ == '__main__':
 
     X_test_faces = np.reshape(X_test, (-1, 78, 78))
 
-    # TODO: visualize the reconstructed faces from testing set
+    # DONE: visualize the reconstructed faces from testing set
     visualize_reconstructions(X_test_faces, X_test_hat, "testing set")
 
-    print('Plotting testing reconstruction error for various k')
-    # TODO: plot the mean squared error of testing set with
+    log.info('Plotting testing reconstruction error for various k')
+    # DONE: plot the mean squared error of testing set with
     k_values = [5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 200]
 
     mses = []
@@ -460,8 +452,8 @@ if __name__ == '__main__':
 
     plot_reconstruction_error(mses, k_values, "testing set")
 
-    print('Creating synthetic faces (Slide 38)')
-    # TODO: synthesize and visualize new faces based on the distribution of the latent variables
+    log.info('Creating synthetic faces (Slide 38)')
+    # DONE: synthesize and visualize new faces based on the distribution of the latent variables
     # you may choose another k that you find suitable
 
     k = 50
